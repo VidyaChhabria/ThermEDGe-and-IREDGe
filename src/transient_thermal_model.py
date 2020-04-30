@@ -13,7 +13,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 from time import time
-from tensorflow.keras.regularizers import l2
 import matplotlib.animation as animation
 import os
 import yaml
