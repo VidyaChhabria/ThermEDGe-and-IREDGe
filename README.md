@@ -13,11 +13,11 @@ Encoder decoder based generative networks for static and transient thermal analy
 ### Install dependencies
 
 - Bare minimum dependencies are the following:
--- python3.6
--- pip-20.1
+    - python3.6
+    - pip-20.1
 
 
-- Create virtual environment and install required python packages
+- Create virtual environment and install the required python packages
 
 ```
 python3 -m venv EDGe
@@ -30,21 +30,20 @@ pip3 install -r requirements.txt
   config.yaml file. Change if required.
 - Example to run the flow:
 ```
-python3 src/transient_thermal_model.py -train_data_path ./data/data_set_2/train/ -test_data_path ./data/data_set_2/test/ -output_plot ./output/.
+python3 src/transient_thermal_model.py -train_data_path ./data/data_set_2/train/Transient_runs -test_data_path ./data/data_set_2/test/Transient_runs -output_plot ./output/.
 ```
 | Argument              	| Comments                                                                             	|
 |-----------------------	|--------------------------------------------------------------------------------------	|
 | -h, --help            	| Prints out the usage                                                                 	|
-| -train_data_path <str>    | Path to the training data(required, str)                                              |
+| -train_data_path <str>    | Path to the training data runs (required, str)                                        |
 | -test_data_path <str>  	| Path to the testing data (str, required)                	                            |
 | -output_plot <str>       	| Path to generate the output plots (required,str)                   	                |
 
-Inside the train and test directories the data is split in Transient_runs and
-Steady_runs directories based on the second set of data provided from
-Qualcomm BDC to me. 
+Inside the train and test directories contain the Transient_runs directories from the second set of data provided from
+Qualcomm. 
 
 ### To do
+- Include script for static thermal prediction
 - Include script for the other implementation of the model which uses static thermal solution
   as an input to predict transient thermal solution
-- Include script for static thermal prediction
 

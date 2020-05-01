@@ -7,17 +7,18 @@ import tensorflow as tf
 
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, UpSampling2D,Conv2DTranspose, Concatenate
 from tensorflow.keras import Model, regularizers
-
+import re
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
-import glob
+from glob import glob
 from time import time
 import matplotlib.animation as animation
 import os
 import yaml
 from encoder_decoder import autoencoder
-
+import shutil
+import argparse
 
 # x_data is input image frame, t_data is time, y_data is golden output image frame
 def train_model(x_data, t_data, y_data):
@@ -34,7 +35,7 @@ def train_model(x_data, t_data, y_data):
                   metrics=['mse', 'mae', 'mape'])
     
     st = time()
-    history = model.fit(x=[x_data,t_data],y=y_data, epochs=500,
+    history = model.fit(x=[x_data,t_data],y=y_data, epochs=100,
                 validation_split=0.1,
                 shuffle=True)
     et = time()
@@ -44,103 +45,118 @@ def train_model(x_data, t_data, y_data):
 
 
 
-def predict_temperature(model, normalization_data):
+def predict_temperature(model, normalization_data, test_data_dir):
+    data_runs = [f for f in glob(test_data_dir+"**/*", recursive=False)]
+    
+    power_map = np.zeros((len(data_runs),45,34,32))
+    temp_map = np.zeros((len(data_runs),45,34,32))
+    
+    num_test_data = 0;
+    for i, run in enumerate(data_runs):
+        print("Reading data: ",run)
+        run_num = re.findall(r'\d+', run)
+        for frame in range(45):
+            fname = run+"/ml_raw_data_%d_%d.csv"%(int(run_num[0]),frame+1)
+            power_map[i,frame,...],temp_map[i,frame,...] = read_image(fname)
+        num_test_data+=1
+
     max_x = normalization_data[0] 
     min_x = normalization_data[1]
     max_t = normalization_data[2]
     min_t = normalization_data[3]
     max_y = normalization_data[4]
     min_y = normalization_data[5]
-    power_map = np.zeros((20,45,34,32))
-    temp_map = np.zeros((20,45,34,32))
-    
-    for im_num in range(20):
-        for frame in range(45):
-            fname = "Transient_runs/Run_%d_contour_data/ml_raw_data_%d_%d.csv"%(im_num+1,im_num+1,frame+1)
-            power_map[im_num,frame,...],temp_map[im_num,frame,...] = read_image(fname)
-
     Writer = animation.writers['html']
     writer = Writer(fps=5, metadata=dict(artist='Me'), bitrate=1800)
     im = []
     figs= []
     anis = []
-    im_start =20
-    num_im =1
+    num_im = num_test_data
     predicted_video = np.zeros((num_im,45,34,32))
     err_video = np.zeros((num_im,45,34,32))
     #get_ipython().run_line_magic('matplotlib', 'notebook')
-    im_start = im_start-1
-    for im_num in range(im_start,im_start+num_im):  
+    for im_num in range(num_im):  
         def updatefig1(frame,im_num):
-            im[(im_num-im_start)*3].set_array(temp_map[im_num,frame,...])
-            im[(im_num-im_start)*3+1].set_array(predicted_video[im_num-im_start,frame,...])
+            im[(im_num)*3].set_array(temp_map[im_num,frame,...])
+            im[(im_num)*3+1].set_array(predicted_video[im_num,frame,...])
             
         def updatefig2(frame,im_num):
-            im[(im_num-im_start)*3+2].set_array(err_video[im_num-im_start,frame,...])
+            im[(im_num)*3+2].set_array(err_video[im_num,frame,...])
     
         for frame in range(45):
             data_pt = np.array([[frame]])/max_t
             in_data = power_map[im_num:im_num+1,0,...,np.newaxis]
             in_data = (in_data-min_x)/(max_x-min_x)
             predicted = model.predict((in_data,data_pt))
-            predicted_video[im_num-im_start,frame,...] = (np.squeeze(predicted)*(max_y-min_y))+min_y
-            err_video[im_num-im_start,frame,...] = predicted_video[im_num-im_start,frame,...] - temp_map[im_num,frame,...] 
-        
-        print(np.max(predicted_video[im_num-im_start,...]))
-        print(np.max(temp_map[im_num,...]))
-            
+            predicted_video[im_num,frame,...] = (np.squeeze(predicted)*(max_y-min_y))+min_y
+            err_video[im_num,frame,...] = predicted_video[im_num,frame,...] - temp_map[im_num,frame,...] 
+        print("Writing result of test: ", data_runs[im_num])
+        test_data_num = re.findall(r'\d+', data_runs[im_num])
+        test_data_num = int(test_data_num[0])
         fig, axes = plt.subplots(1,2)
-        max_val = np.max((np.max(temp_map[im_num,...]), np.max(predicted_video[im_num-im_start,...])))
-        max_err = np.max(err_video[im_num-im_start,...])
-        min_err = np.min(err_video[im_num-im_start,...])
+        max_val = np.max((np.max(temp_map[im_num,...]), np.max(predicted_video[im_num,...])))
+        max_err = np.max(err_video[im_num,...])
+        min_err = np.min(err_video[im_num,...])
         im.append(axes[0].imshow(temp_map[im_num,0], vmin=0, vmax=max_val))
-        im.append(axes[1].imshow(predicted_video[im_num-im_start,0,...], vmin=0, vmax=max_val))
-        fig.colorbar(im[3*(im_num-im_start)+1], ax=axes.ravel().tolist())
+        im.append(axes[1].imshow(predicted_video[im_num,0,...], vmin=0, vmax=max_val))
+        fig.colorbar(im[3*(im_num)+1], ax=axes.ravel().tolist())
         
         anis.append(animation.FuncAnimation(fig, updatefig1, frames=range(45), fargs=(im_num,),
                                       interval=150 ))
-        anis[2*(im_num-im_start)].save("output_plots/im_%d.html"%im_num, writer=writer)
+        anis[2*(im_num)].save("output_plots/run_contours_%d.html"%test_data_num, writer=writer)
+        plt.close()
         fig2 = plt.figure()
-        im.append(plt.imshow(err_video[im_num-im_start,0,...], vmin=min_err, vmax=max_err))
+        im.append(plt.imshow(err_video[im_num,0,...], vmin=min_err, vmax=max_err))
         plt.colorbar()
         anis.append(animation.FuncAnimation(fig2, updatefig2, frames=range(45), fargs=(im_num,),
                                       interval=150 ))
-        anis[2*(im_num-im_start)+1].save("output_plots/err_%d.html"%im_num, writer=writer)
+        anis[2*(im_num)+1].save("output_plots/err_contours_%d.html"%test_data_num, writer=writer)
+        plt.close()
         dir = os.path.join("./","output_plots","output_plots")
         if not os.path.exists(dir):
             os.mkdir(dir)
-        os.rename("output_plots/im_%d_frames"%im_num,"output_plots/output_plots/im_%d_frames"%im_num )
-        os.rename("output_plots/err_%d_frames"%im_num,"output_plots/output_plots/err_%d_frames"%im_num )
+            os.rename("output_plots/run_contours_%d_frames"%test_data_num,"output_plots/output_plots/run_contours_%d_frames"%test_data_num )
+            os.rename("output_plots/err_contours_%d_frames"%test_data_num,"output_plots/output_plots/err_contours_%d_frames"%test_data_num )
+        else:
+            if (os.path.exists("output_plots/output_plots/run_contours_%d_frames"%test_data_num)
+            and os.path.exists("output_plots/output_plots/err_contours_%d_frames"%test_data_num)):
+                shutil.rmtree("output_plots/output_plots/run_contours_%d_frames"%test_data_num )
+                shutil.rmtree("output_plots/output_plots/err_contours_%d_frames"%test_data_num )
+            os.rename("output_plots/run_contours_%d_frames"%test_data_num,"output_plots/output_plots/run_contours_%d_frames"%test_data_num )
+            os.rename("output_plots/err_contours_%d_frames"%test_data_num,"output_plots/output_plots/err_contours_%d_frames"%test_data_num )
 
 
-def read_data():
-    power_map = np.zeros((20,45,34,32))
-    temp_map = np.zeros((20,45,34,32))
+
+def read_data(data_dir):
+    data_runs = [f for f in glob(data_dir+"**/*", recursive=False)]
     
-    for im_num in range(20):
+    power_map = np.zeros((len(data_runs),45,34,32))
+    temp_map = np.zeros((len(data_runs),45,34,32))
+    
+    num_images = 0;
+    for i, run in enumerate(data_runs):
+        print("Reading data: ",run)
+        run_num = re.findall(r'\d+', run)
+        run_num = int(run_num[0])
         for frame in range(45):
-            fname = "Transient_runs/Run_%d_contour_data/ml_raw_data_%d_%d.csv"%(im_num+1,im_num+1,frame+1)
-            power_map[im_num,frame,...],temp_map[im_num,frame,...] = read_image(fname)
+            print(run)
+            fname = run+"/ml_raw_data_%d_%d.csv"%run_num,frame+1)
+            print(fname)
+            power_map[i,frame,...],temp_map[i,frame,...] = read_image(fname)
+            num_images+=1
     
     
-    static_power_map = np.zeros((20,34,32))
-    static_temp_map = np.zeros((20,34,32))
-    for im_num in range(20):
-        fname = "Steady_runs/ml_raw_data_%d.csv"%(im_num+1)
-        static_power_map[im_num,...], static_temp_map[im_num,...] = read_image(fname)
-    
-    num_images = 855 #19 *45
     count = 0
     x_data = np.zeros((num_images,34,32,1))
     y_data = np.zeros((num_images,34,32,1))
     t_data = np.zeros((num_images,1))
-    for im_num in range(0,19):
+    for im_num in range(len(data_runs)):
         for frame in range(45):
             x_data[count,:,:,0] = power_map[im_num,44,...]
             y_data[count,:,:,0] = temp_map[im_num,frame,...]
             t_data[count,...] = frame
             count +=1
-    return x_data, y_data, t_data
+    return [x_data, y_data, t_data]
     
 def process_data(x_data, y_data, t_data):
     indices = np.arange(x_data.shape[0])
@@ -190,11 +206,30 @@ for key, value in config.items():
 
 
 def main():
-    x_data, y_data, t_data = read_data()
-    x_data, y_data, t_data, normalization_data = process_data(x_data, y_data, t_data)
+    
+    parser = argparse.ArgumentParser(description="Training and inference flow for transient thermal analysis")
+    parser.add_argument("-train_data_path",
+                        help="Provide path to the directory containing Transient_runs and Steady_run folders with training data",
+                        required=True)
+    parser.add_argument("-test_data_path",
+                       help="Provide path to the directory containing Transient_runs and Steady_run folders with test data",
+                       required=True)
+    parser.add_argument("-output_plot_dir",
+                        help="Provide path to generate the output plots",
+                       required=True)
+    args = parser.parse_args()
+    train_data_dir =  args.train_data_path
+    test_data_dir =  args.test_data_path
+    output_plot_dir = args.output_plot_dir
+    
+    data_train = read_data(train_data_dir)
+    #data_test = read_data(test_data_dir)
+    x_data, y_data, t_data, normalization_data = process_data(data_train[0],
+            data_train[1], data_train[2])
     model = train_model(x_data, t_data, y_data)
-    predict_temperature(model, normalization_data)
-
+    predict_temperature(model, normalization_data, test_data_dir)
+    #plot_test_results(predicted_video, err_video, temp_map, output_plot_dir)
+    
 
 
 if __name__ == '__main__':
