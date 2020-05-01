@@ -10,6 +10,10 @@ Encoder decoder based generative networks for static and transient thermal analy
 
 ## How to run:
 
+### Download
+
+`git clone https://github.com/VidyaChhabria/EDGe-Thermal-Analysis.git`
+
 ### Install dependencies
 
 - Bare minimum dependencies are the following:
