@@ -39,8 +39,13 @@ python3 src/transient_thermal_model.py -train_data_path ./data/data_set_2/train/
 | -test_data_path <str>  	| Path to the testing data (str, required)                	                            |
 | -output_plot <str>       	| Path to generate the output plots (required,str)                   	                |
 
-Inside the train and test directories contain the Transient_runs directories from the second set of data provided from
-Qualcomm. 
+Note: 
+- The paths here point to the Transient runs data directory as shown in the example
+above with the data in the same csv file format and similar naming convention
+provided to me:"Transient_runs/Run_%d_contour_data"
+- Create two directory trees with the same structure. One for training and one for
+testing. 
+- Add all the data points for testing into the test/Transient_runs directory
 
 ### To do
 - Include script for static thermal prediction

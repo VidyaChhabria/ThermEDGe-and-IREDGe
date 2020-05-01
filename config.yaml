@@ -2,12 +2,6 @@
 # inference.So that this is the only file to modify before running the flow. 
 
 ---
- # Add all the data points to be used for training in this directory
- training_data_path: "./data/data_set_2/train/"
- # Add all the data points to be used for testing in this directory
- testing_data_path: "./data/data_set_2/test/"        
- # Path for output plots on test data:
- output_plot_path: "./output/"
  chip_size_x: 34
  chip_size_y: 32
  tile_size: 250e-6
