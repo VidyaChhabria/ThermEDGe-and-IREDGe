@@ -7,6 +7,13 @@ Encoder decoder based generative networks for static and transient thermal analy
 [![AskMe](https://img.shields.io/badge/ask-me-yellow)](https://github.com/VidyaChhabria/TherMOS/issues)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
+Please find the video below or please click [here](https://github.com/VidyaChhabria/ThermEDGe-and-IREDGe/raw/master/Fig7.gif) and download and view in any image viewer.
+
+
+| <img src="Fig7.gif" width=900px> |
+|:--:|
+| *Video comparing the prediction of transient ThermEDGe against commercial tool-generated temperature contours for Testcase 6: (i) left video shows the time varying power map, (ii) center video shows the commercially-generated temperature contours, and (iii) right video shows ThermEDGe-generated temperature contours|
+
 
 ## How to run:
 
