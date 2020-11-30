@@ -1,5 +1,5 @@
 # ThermEDGe and IREDGe
-Encoder decoder based generative networks for static and transient thermal analysis. 
+Encoder decoder based generative networks for static and transient thermal analysis. This repository contains code for the paper titled "Thermal and IR Drop Analysis Using ConvolutionalEncoder-Decoder Networks". 
 
 [![Standard](https://img.shields.io/badge/python-3.6-blue)](https://commons.wikimedia.org/wiki/File:Blue_Python_3.6_Shield_Badge.svg)
 [![Download](https://img.shields.io/badge/Download-here-red)](https://github.com/VidyaChhabria/TherMOS/archive/master.zip)
@@ -7,7 +7,8 @@ Encoder decoder based generative networks for static and transient thermal analy
 [![AskMe](https://img.shields.io/badge/ask-me-yellow)](https://github.com/VidyaChhabria/TherMOS/issues)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-Please find the video below or please click [here](https://github.com/VidyaChhabria/ThermEDGe-and-IREDGe/raw/master/Fig7.gif) and download and view in any image viewer.
+
+Fig.7 of the paper is a video which is available below. Please click [here](https://github.com/VidyaChhabria/ThermEDGe-and-IREDGe/raw/master/Fig7.gif) and download and view in any image viewer.
 
 
 | <img src="Fig7.gif" width=900px> |
