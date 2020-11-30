@@ -1,4 +1,4 @@
-# EDGe-Thermal-Analysis
+# ThermEDGe and IREDGe
 Encoder decoder based generative networks for static and transient thermal analysis. 
 
 [![Standard](https://img.shields.io/badge/python-3.6-blue)](https://commons.wikimedia.org/wiki/File:Blue_Python_3.6_Shield_Badge.svg)
