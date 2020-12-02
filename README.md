@@ -64,3 +64,8 @@ testing.
 - Include script for the other implementation of the model which uses static thermal solution
   as an input to predict transient thermal solution
 
+
+### How to cite
+
+V. A. Chhabria, V. Ahuja, A. Prabhu, N. Patil, P. Jain, and S. S. Sapatnekar, “Thermal and IR Drop Analysis Us-ing Convolutional Encoder-Decoder Networks,” Proc.  of Asia and South Pacific Design Automation Conference, 2021.
+
